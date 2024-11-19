@@ -25,6 +25,7 @@ class RequisicaoHandler(BaseHTTPRequestHandler):
     def _set_headers(self, status=200):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
     
     def do_POST(self):
@@ -32,6 +33,19 @@ class RequisicaoHandler(BaseHTTPRequestHandler):
             senha = self.fila_atendimento.gerar_senha()
             self._set_headers(201)
             self.wfile.write(json.dumps({"senha": senha}).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"message": "Rota não encontrada."}).encode())
+ 
+    def do_GET(self):
+        if self.path == "/chamar-senha":
+            senha = self.fila_atendimento.atender_cliente()
+            if senha:
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"senha": senha}).encode())
+            else:
+                self._set_headers(204)
+                self.wfile.write(json.dumps({"message": "Não há senhas na fila."}).encode())
         else:
             self._set_headers(404)
             self.wfile.write(json.dumps({"message": "Rota não encontrada."}).encode())
